@@ -35,16 +35,31 @@ def send_command(command, ip_addr='127.0.0.1', port=50001):
         dynlen = soc.recv(padding)
         conn_success = soc.recv(int(dynlen.strip() or 0))
         print(f'Server>> {conn_success.decode()}')
+    else:
+        dynlen = soc.recv(padding)
+        conn_msg = soc.recv(int(dynlen.strip() or 0))
+        if conn_msg == 'DATA':
+            dynlen = soc.recv(padding)
+            conn_drv = soc.recv(int(dynlen.strip() or 0))
+            print(f'Server>> Data Saved to: {conn_drv}')
+            dynlen = soc.recv(padding)
+            conn_success = soc.recv(int(dynlen.strip() or 0))
+        else:
+            dynlen = soc.recv(padding)
+            conn_success = soc.recv(int(dynlen.strip() or 0))
+            print('Server>> {} -- Return Code {}'.format(conn_msg.decode(), conn_success.decode()))
     soc.close()
+    return conn_success
 
 def scheck(ip_addr='127.0.0.1', port=50001):
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     success = soc.connect_ex((ip_addr, port))
     print('Attempting Connection to {} Port: {}--{}'.format(ip_addr, port, success))
     soc.close()
+    return success
 
 if __name__ == "__main__":
-
-    send_command('np.sum([1,1])')
-    #scheck()
-    send_command('1+1')
+    ss=scheck(ip_addr='127.0.0.1',port=61234)
+    # send_command('np.sum([1,1])')
+    # #scheck()
+    # send_command('1+1')
