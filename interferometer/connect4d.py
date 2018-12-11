@@ -12,17 +12,16 @@ License: MIT
 """
 
 import socket
-import numpy as np
 import time
 import os
 import logging
 
 # setup logging for debug
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 fhandle = logging.FileHandler('socket.log')
-fhandle.setLevel(logging.INFO)
+fhandle.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 fhandle.setFormatter(formatter)
 
@@ -31,6 +30,11 @@ logger.debug('Starting connect4d.py')
 """Setup the Interferomter as a Server"""
 
 padding = 8 # max number of digits of message length
+try:
+    #Makes sure system resets if script needs to run multiple times
+    srv.soc.close()
+except NameError:
+    pass
 
 class InterferometerServer:
     def __init__(self, host_ip='127.0.0.1', port=61112):
@@ -42,6 +46,7 @@ class InterferometerServer:
         self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.soc.settimeout(20)
         self.soc.bind((self.host_ip, self.port))
+        time.sleep(0.2)  #ensures socket binds to ip/port
         self.soc.listen(10)
 
     def handle_connection(self, remote_network=False):
@@ -81,7 +86,7 @@ class InterferometerServer:
                     self.send_msg(conn, msg)
 
                     conn.close()
-                elif 'exec(' in cmdmsg or 'eval(' in cmdmsg:
+                elif 'exec(' in cmdmsg or 'execfile(' in cmdmsg or 'eval(' in cmdmsg:
                     msg = "COMMAND ERROR: RESTRICTED ACCESS TO EXEC and EVAL FUNCTIONS"
                     self.send_msg(conn, msg)
                     msg = '1'
@@ -96,13 +101,22 @@ class InterferometerServer:
                 else:
                     try:
                         #  Attempt to execute function on remote computer
-                        dataresult = None
+                        dataresult = None  # Resets in case dataresult exists in namespace
+                        # Yes this is bad. Looking for alternatives in the future (maybe rewrite/custom version of ast.literal_eval)
                         exec(cmdmsg)
+                        if len(cmdmsg.split('=')) > 1:
+                            #Also bad. Working to find better soln
+                            #eval returns the variable name which when called
+                            #saves the variable value to dataresult. If this is
+                            #an object/array/list it is the same list in memory.
+                            #If number or string, it is a copy.
+                            dataresult = eval(cmdmsg.split('=')[0])
                         if dataresult:
-                            # If the statment returns a value, code assumes it's data. Will return the datafile location
-                            msg = "DATA"
-                            self.send_msg(conn, msg)
-                            msg = "%s" % dataresult
+                            # If the statment returns a value, code assumes it's data. If ndarray, converts to binary string. else assumes str() to convert
+                            try:
+                                msg = dataresult.tostring()
+                            except AttributeError:
+                                msg = str(dataresult)
                             self.send_msg(conn, msg)
                         else:
                             msg = "NO RETURN DATA"
@@ -110,6 +124,8 @@ class InterferometerServer:
                         # Send success/fail code (0/1)
                         msg = '0'
                         self.send_msg(conn, msg)
+                    except socket.error:
+                        logger.error('Unable to transmit data')
                     finally:
                         conn.close()
             else:
@@ -121,6 +137,10 @@ class InterferometerServer:
         # logging.info('Server Closed')
 
     def send_msg(self, conn, msg):
+        """
+        Convienience function for sending messages. Sends message length and then message to receiving computer
+        should refactor to _send_msg to make private in future
+        """
         mlen = '%s' % len(msg)
         conn.send(mlen.rjust(padding, '0'))
         conn.send(msg)
