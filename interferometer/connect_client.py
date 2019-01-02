@@ -26,7 +26,7 @@ def send_command(command, ip_addr='127.0.0.1', port=61112):
     print('Attempting Connection to {} Port: {}'.format(ip_addr, port))
     dynlen = soc.recv(padding)  # length should never be greater than 1e7
     conn_success = soc.recv(int(dynlen.strip() or 0))
-    print(f'Server>> {conn_success.decode()}')
+    print('Server>> %s ' % conn_success.decode())
 
     soc.send('{}'.format(len(command)).rjust(padding, '0').encode('utf-8'))
     soc.send(command.encode('utf-8'))
@@ -34,14 +34,14 @@ def send_command(command, ip_addr='127.0.0.1', port=61112):
     if command == 'CLOSE':
         dynlen = soc.recv(padding)
         conn_success = soc.recv(int(dynlen.strip() or 0))
-        print(f'Server>> {conn_success.decode()}')
+        print('Server>> %s ' % conn_success.decode())
     else:
         dynlen = soc.recv(padding)
         conn_msg = soc.recv(int(dynlen.strip() or 0))
         if conn_msg == 'DATA':
             dynlen = soc.recv(padding)
             conn_drv = soc.recv(int(dynlen.strip() or 0))
-            print(f'Server>> Data Saved to: {conn_drv}')
+            print('Server>> Data Saved to: %s' %  conn_drv)
             dynlen = soc.recv(padding)
             conn_success = soc.recv(int(dynlen.strip() or 0))
             print('Server>> {} -- Return Code {}'.format(conn_msg.decode(), conn_success.decode()))
