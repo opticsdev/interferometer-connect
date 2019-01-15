@@ -9,8 +9,6 @@ Author: James Johnson
 License: MIT
 """
 
-import os
-import numpy as np
 import socket
 
 # soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -55,23 +53,10 @@ def send_command(command, ip_addr='127.0.0.1', port=61112, fname=''):
                         break
                     fin.write(data)
 
-        else:
-            pass
-            """Not sure what I was doing here. refactor to see if obsolete"""
-            # dynlen = soc.recv(padding)
-            # databuffer = ""
-            # # Open link until full message recieved
-            # while True:
-            #     if int(dynlen.strip() or 0) > 1023:
-            #         rxbuffer = soc.recv(1024).decode()
-            #         if not rxbuffer:
-            #             break
-            #         databuffer += rxbuffer
-            #
-            #     else:
-            #         databuffer += soc.recv(int(dynlen.strip() or 0)).decode()
-
+        elif len(conn_msg) == 1:
             print('Server>> Return Code {}'.format(conn_msg))
+        else:
+            print('Server>> {}'.format(conn_msg))
     soc.close()
     return conn_success
 
@@ -103,7 +88,8 @@ def filesavecheck():
 
 def filetransfercheck():
     """Debug function. Neet to remove/replace into /test"""
-    fname_send = r'C:\Users\James Johnson\Google Drive\materialsLabShared\4D_tests_data\180322_pellicle_testing\20180322_01_RefFlat.h5'
+    fname_send = r'C:\Users\James Johnson\Google Drive\materialsLabShared' + \
+                 r'\4D_tests_data\180322_pellicle_testing\20180322_01_RefFlat.h5'
     fname_save = r'C:\Users\Public\Documents\Python Scripts\testsavetx1h5.h5'
     command = 'self.send_file(r"{}")'.format(fname_send)
     print('Trying Command: {}'.format(command))

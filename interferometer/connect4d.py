@@ -174,15 +174,14 @@ class InterferometerServer:
         fname : str  -- File name to be sent
 
         """
-        # import pdb; pdb.set_trace()
+        # Only permit certain files to transfer (improves security)
         extension_whitelist = ['h5', 'fits', 'opd', 'csv', 'dat']
         if fname.split('.')[-1] not in extension_whitelist:
-            message = 'File %s filetype not in whitelist' % fname
+            message = 'File %s filetype not in extension whitelist' % fname
             logger.warning(message)
             self.send_msg(message)
             self.conn.close()
         else:
-            print(fname)
             try:
                 with open(fname, 'rb') as fout:
                     self.send_msg('FILETX')
@@ -191,6 +190,7 @@ class InterferometerServer:
                         self.conn.send(datatx)
                         datatx = fout.read(self.BUFFER)
             except EnvironmentError as e:
+                # Console messages
                 print('File %s not found!' % fname)
                 print(e)
                 message = 'File %s not found' % fname
