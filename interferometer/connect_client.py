@@ -2,8 +2,9 @@
 
 Main function for accessing a 4D interferometer to collect data from an external script.
 
-Initially using Sockets. Will look to upgrade to an SSH implementation for true
-remote access in the future
+Uses Sockets to create an IP connection to an internal/compiled copy of Python running
+inside the Interferometer. This file is setup to work with 4D commanding. May need adjustment
+in the future to work with Zygos.
 
 Author: James Johnson
 License: MIT

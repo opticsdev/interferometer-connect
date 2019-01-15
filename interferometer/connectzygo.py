@@ -1,9 +1,8 @@
 """
 
-Main function for setting up a 4D interferometer as a remote server.
+Main function for setting up a Zygo interferometer as a remote server.
 
-Initially using Sockets. Will look to upgrade to an SSH implementation for true
-remote access in the future
+Not tested at this time. Module is not working!
 
 Author: James Johnson
 License: MIT
